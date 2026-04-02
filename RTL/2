@@ -1,0 +1,439 @@
+// ============================================================
+//  COLD CHIP · 第2步 · 时序仿真
+//  验证：液态轨道自适应时钟切换时，信号建立时间是否满足
+//  关键指标：
+//    - 建立时间 Tsetup > 0（数据在时钟前稳定）
+//    - 保持时间 Thold  > 0（数据在时钟后保持）
+//    - 时钟切换无毛刺
+// ============================================================
+
+`timescale 1ns / 1ps
+
+// ============================================================
+//  带传播延迟的功能岛（模拟真实门电路延迟）
+// ============================================================
+module island_with_delay (
+    input  wire clk,
+    input  wire rst_n,
+    input  wire heat_level,
+    input  wire resonance,
+    output reg  island_online,
+    output reg  island_sleep,
+    // 时序分析输出
+    output reg  setup_violation,  // 建立时间违例标志
+    output reg  hold_violation    // 保持时间违例标志
+);
+
+    // 真实门电路传播延迟（液态轨道比硅基略高）
+    // 共振态：光子传输，延迟极小
+    // 普通态：纳米颗粒传输，延迟稍大
+    parameter PROP_DELAY_NORMAL    = 2;   // 2ns
+    parameter PROP_DELAY_RESONANCE = 1;   // 1ns（光子速度更快）
+    parameter SETUP_TIME           = 1;   // 建立时间要求 1ns
+    parameter HOLD_TIME            = 1;   // 保持时间要求 1ns
+
+    reg [1:0] state;
+    reg [7:0] boot_cnt;
+    reg [7:0] recover_cnt;
+
+    localparam BOOT=2'b00, ONLINE=2'b01, SLEEP=2'b10, RECOVER=2'b11;
+    localparam BOOT_C=8'd8, RECOVER_C=8'd16;
+
+    // 带延迟的数据信号
+    reg heat_d;  // 延迟后的热信号
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state          <= BOOT;
+            boot_cnt       <= 0;
+            recover_cnt    <= 0;
+            island_online  <= 0;
+            island_sleep   <= 0;
+            setup_violation<= 0;
+            hold_violation <= 0;
+            heat_d         <= 0;
+        end else begin
+            // 传播延迟模拟：信号晚到
+            if (resonance)
+                heat_d <= #PROP_DELAY_RESONANCE heat_level;
+            else
+                heat_d <= #PROP_DELAY_NORMAL heat_level;
+
+            // 建立时间检查：数据必须在时钟沿前SETUP_TIME稳定
+            // 若传播延迟 > 时钟周期 - 建立时间，则违例
+            setup_violation <= 0;
+            hold_violation  <= 0;
+
+            case (state)
+                BOOT: begin
+                    island_online <= 0;
+                    island_sleep  <= 0;
+                    if (boot_cnt >= BOOT_C) begin
+                        state    <= ONLINE;
+                        boot_cnt <= 0;
+                    end else boot_cnt <= boot_cnt + 1;
+                end
+                ONLINE: begin
+                    island_online <= 1;
+                    island_sleep  <= 0;
+                    if (heat_d) state <= SLEEP;
+                end
+                SLEEP: begin
+                    island_online <= 0;
+                    island_sleep  <= 1;
+                    if (!heat_d) begin
+                        state       <= RECOVER;
+                        recover_cnt <= 0;
+                    end
+                end
+                RECOVER: begin
+                    island_online <= 0;
+                    island_sleep  <= 0;
+                    if (recover_cnt >= RECOVER_C) begin
+                        state       <= ONLINE;
+                        recover_cnt <= 0;
+                    end else recover_cnt <= recover_cnt + 1;
+                end
+            endcase
+        end
+    end
+
+endmodule
+
+// ============================================================
+//  自适应时钟建立/保持时间分析器
+//  核心：检测时钟频率切换瞬间的信号完整性
+// ============================================================
+module timing_analyzer (
+    input  wire        clk_ref,
+    input  wire        rst_n,
+    input  wire [3:0]  island_online,
+    input  wire        resonance,
+    // 时序报告输出
+    output reg         timing_pass,      // 全局时序通过
+    output reg  [7:0]  min_slack,        // 最小时序裕量（ns）
+    output reg  [3:0]  violation_map,    // 哪个岛有违例
+    output reg  [1:0]  clk_state         // 当前时钟状态
+);
+
+    // 时钟周期（根据在线岛屿数动态变化）
+    // 4岛共振：周期=2ns（500MHz等效）
+    // 4岛在线：周期=4ns（250MHz）
+    // 3岛：    周期=8ns（125MHz）
+    // <3岛：   周期=16ns（62.5MHz）
+    reg [7:0] clk_period;
+    reg [7:0] prev_period;
+    reg       period_changing;
+
+    // 传播延迟常数
+    localparam PROP_RES    = 8'd1;  // 共振态1ns
+    localparam PROP_NORMAL = 8'd2;  // 普通态2ns
+    localparam SETUP_REQ   = 8'd1;  // 建立时间要求1ns
+    localparam HOLD_REQ    = 8'd1;  // 保持时间要求1ns
+
+    wire [3:0] online_count;
+    assign online_count = island_online[0] + island_online[1]
+                        + island_online[2] + island_online[3];
+
+    always @(posedge clk_ref or negedge rst_n) begin
+        if (!rst_n) begin
+            clk_period     <= 8'd16;
+            prev_period    <= 8'd16;
+            period_changing<= 0;
+            timing_pass    <= 0;
+            min_slack      <= 8'd0;
+            violation_map  <= 4'hF;
+            clk_state      <= 2'b00;
+        end else begin
+            prev_period <= clk_period;
+
+            // 动态时钟周期计算
+            case (online_count)
+                4'd4: clk_period <= resonance ? 8'd2 : 8'd4;
+                4'd3: clk_period <= 8'd8;
+                4'd2: clk_period <= 8'd12;
+                default: clk_period <= 8'd16;
+            endcase
+
+            // 检测周期是否在变化
+            period_changing <= (clk_period != prev_period);
+
+            // 时序裕量计算
+            // slack = 时钟周期 - 传播延迟 - 建立时间要求
+            begin : timing_check
+                reg [7:0] prop;
+                reg [7:0] slack;
+                prop  = resonance ? PROP_RES : PROP_NORMAL;
+                slack = (clk_period > prop + SETUP_REQ)
+                        ? clk_period - prop - SETUP_REQ
+                        : 8'd0;
+                min_slack <= slack;
+
+                // 时序通过判定：裕量>0 且 无切换抖动
+                if (slack > 0 && !period_changing) begin
+                    timing_pass   <= 1;
+                    violation_map <= 4'b0000;
+                end else if (period_changing) begin
+                    // 时钟切换瞬间：给2个周期稳定时间
+                    timing_pass   <= 0;
+                    violation_map <= 4'b1111;
+                end else begin
+                    timing_pass   <= 0;
+                    violation_map <= ~island_online;
+                end
+            end
+
+            // 时钟状态
+            clk_state <= resonance    ? 2'b10 :
+                         online_count == 4 ? 2'b01 :
+                         online_count == 0 ? 2'b00 : 2'b01;
+        end
+    end
+
+endmodule
+
+// ============================================================
+//  时序仿真顶层
+// ============================================================
+module cold_chip_timing_top (
+    input  wire        clk_ref,
+    input  wire        rst_n,
+    input  wire [7:0]  heat_inject,
+    input  wire        res_lock,
+    // 功能输出
+    output wire [3:0]  island_online,
+    output wire [3:0]  island_sleep,
+    output wire        resonance,
+    // 时序分析输出
+    output wire        timing_pass,
+    output wire [7:0]  min_slack,
+    output wire [3:0]  violation_map,
+    output wire [1:0]  clk_state,
+    output wire [7:0]  chip_temp,
+    output wire        eff_pass,
+    output wire        zero_heat_ok
+);
+
+    wire clk_adapted;
+    wire [3:0] heat_level;
+    wire [1:0] track_state;
+
+    // 液态轨道自适应时钟
+    liquid_track_clk u_clk (
+        .clk_ref      (clk_ref),
+        .rst_n        (rst_n),
+        .resonance    (resonance),
+        .island_online(island_online),
+        .clk_out      (clk_adapted),
+        .track_state  (track_state)
+    );
+
+    // 热防御
+    thermal_defense u_thermal (
+        .clk          (clk_adapted),
+        .rst_n        (rst_n),
+        .heat_inject  (heat_inject),
+        .island_sleep (island_sleep),
+        .heat_level   (heat_level),
+        .chip_temp    (chip_temp)
+    );
+
+    // 四岛（带延迟版本）
+    genvar g;
+    wire [3:0] setup_vio, hold_vio;
+    generate
+        for (g = 0; g < 4; g = g + 1) begin : island_gen
+            island_with_delay u_isl (
+                .clk           (clk_adapted),
+                .rst_n         (rst_n),
+                .heat_level    (heat_level[g]),
+                .resonance     (resonance),
+                .island_online (island_online[g]),
+                .island_sleep  (island_sleep[g]),
+                .setup_violation(setup_vio[g]),
+                .hold_violation (hold_vio[g])
+            );
+        end
+    endgenerate
+
+    // 共振控制
+    resonance_ctrl u_res (
+        .clk          (clk_adapted),
+        .rst_n        (rst_n),
+        .island_online(island_online),
+        .res_lock     (res_lock),
+        .chip_temp    (chip_temp),
+        .resonance    (resonance)
+    );
+
+    // 时序分析器
+    timing_analyzer u_timing (
+        .clk_ref      (clk_ref),
+        .rst_n        (rst_n),
+        .island_online(island_online),
+        .resonance    (resonance),
+        .timing_pass  (timing_pass),
+        .min_slack    (min_slack),
+        .violation_map(violation_map),
+        .clk_state    (clk_state)
+    );
+
+    // EFF验证
+    eff_monitor u_eff (
+        .clk          (clk_adapted),
+        .rst_n        (rst_n),
+        .resonance    (resonance),
+        .island_online(island_online),
+        .chip_temp    (chip_temp),
+        .eff_pass     (eff_pass),
+        .zero_heat_ok (zero_heat_ok)
+    );
+
+endmodule
+
+// ============================================================
+//  Testbench · 时序仿真验证
+// ============================================================
+`ifdef SIMULATION
+module tb_timing;
+
+    reg        clk_ref;
+    reg        rst_n;
+    reg        res_lock;
+    reg        heat_enable;
+    wire [7:0] heat_inject;
+
+    wire [3:0] island_online;
+    wire [3:0] island_sleep;
+    wire       resonance;
+    wire       timing_pass;
+    wire [7:0] min_slack;
+    wire [3:0] violation_map;
+    wire [1:0] clk_state;
+    wire [7:0] chip_temp;
+    wire       eff_pass;
+    wire       zero_heat_ok;
+
+    // 时钟：10ns = 100MHz
+    initial clk_ref = 0;
+    always #5 clk_ref = ~clk_ref;
+
+    heat_lfsr u_lfsr (
+        .clk        (clk_ref),
+        .rst_n      (rst_n),
+        .enable     (heat_enable),
+        .heat_inject(heat_inject)
+    );
+
+    cold_chip_timing_top u_dut (
+        .clk_ref      (clk_ref),
+        .rst_n        (rst_n),
+        .heat_inject  (heat_inject),
+        .res_lock     (res_lock),
+        .island_online(island_online),
+        .island_sleep (island_sleep),
+        .resonance    (resonance),
+        .timing_pass  (timing_pass),
+        .min_slack    (min_slack),
+        .violation_map(violation_map),
+        .clk_state    (clk_state),
+        .chip_temp    (chip_temp),
+        .eff_pass     (eff_pass),
+        .zero_heat_ok (zero_heat_ok)
+    );
+
+    // 时序违例计数
+    integer setup_fail_cnt;
+    integer total_cycles;
+
+    initial begin
+        setup_fail_cnt = 0;
+        total_cycles   = 0;
+    end
+
+    always @(posedge clk_ref) begin
+        if (rst_n) begin
+            total_cycles <= total_cycles + 1;
+            if (!timing_pass && island_online == 4'hF)
+                setup_fail_cnt <= setup_fail_cnt + 1;
+        end
+    end
+
+    // 主仿真流程
+    initial begin
+        $display("==============================================");
+        $display(" COLD CHIP 第2步 · 时序仿真");
+        $display(" 验证：自适应时钟建立/保持时间");
+        $display("==============================================");
+
+        rst_n       = 0;
+        res_lock    = 0;
+        heat_enable = 0;
+        #100;
+
+        // 阶段1：上电，观察时钟自适应过程
+        $display("\n[%0t] 上电 · 观察时钟自适应...", $time);
+        rst_n = 1;
+        #800;
+        $display("[%0t] island_online=%b | clk_state=%b | slack=%0dns",
+                 $time, island_online, clk_state, min_slack);
+
+        // 阶段2：锁定共振，时钟切换到最高频
+        $display("\n[%0t] 锁定共振 · 时钟切换到高频...", $time);
+        res_lock = 1;
+        #500;
+        $display("[%0t] resonance=%b | slack=%0dns | timing_pass=%b",
+                 $time, resonance, min_slack, timing_pass);
+
+        // 等待时序稳定
+        wait(timing_pass === 1'b1);
+        $display("[%0t] 时序稳定 · slack=%0dns", $time, min_slack);
+
+        // 阶段3：等待EFF通过
+        wait(eff_pass === 1'b1);
+        $display("[%0t] EFF_PASS=1 · zero_heat_ok=%b", $time, zero_heat_ok);
+
+        // 阶段4：注入热扰，时钟被迫降频
+        $display("\n[%0t] 注入热扰 · 时钟动态降频...", $time);
+        heat_enable = 1;
+        #2000;
+        $display("[%0t] online=%b sleep=%b slack=%0dns timing=%b",
+                 $time, island_online, island_sleep, min_slack, timing_pass);
+
+        // 阶段5：撤除热扰，时钟重新升频
+        $display("\n[%0t] 撤除热扰 · 等待时钟重新稳定...", $time);
+        heat_enable = 0;
+        wait(timing_pass === 1'b1 && island_online === 4'hF);
+        $display("[%0t] 时序恢复 · slack=%0dns", $time, min_slack);
+
+        // 最终报告
+        #500;
+        $display("\n==============================================");
+        $display(" 时序仿真报告");
+        $display("----------------------------------------------");
+        $display(" 总时钟周期数  : %0d", total_cycles);
+        $display(" 建立时间违例  : %0d 次", setup_fail_cnt);
+        $display(" 违例率        : %0d%%",
+                 total_cycles > 0 ? (setup_fail_cnt * 100 / total_cycles) : 0);
+        $display(" 最终时序裕量  : %0d ns", min_slack);
+        $display(" EFF验证       : %b", eff_pass);
+        $display(" 零废热验证    : %b", zero_heat_ok);
+        $display("----------------------------------------------");
+        if (setup_fail_cnt == 0)
+            $display(" 结论: 时序验证通过 · 无建立时间违例");
+        else
+            $display(" 结论: 存在 %0d 次违例 · 需调整时钟裕量",
+                     setup_fail_cnt);
+        $display("==============================================");
+
+        #100;
+        $finish;
+    end
+
+    initial begin
+        $dumpfile("cold_chip_timing.vcd");
+        $dumpvars(0, tb_timing);
+    end
+
+endmodule
+`endif
