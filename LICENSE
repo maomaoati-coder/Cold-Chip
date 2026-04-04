@@ -1,0 +1,24 @@
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+Applies to : docs/, Verification Report/,README.md, all papers and reportsRTL code   : See separate terms below (Evaluation Only)
+DOCUMENTATION LICENSE (CC BY 4.0)
+You are free to:Share      — copy and redistribute in any medium or formatAdapt      — remix, transform, and build upon the materialCommercial — use for any purpose, even commercially
+Under the following terms:Attribution — You must give appropriate credit:Author  : maomaoati-coderProject : PGU-chakouURL     : github.com/maomaoati-coder/PGU-chakouLicense : CC BY 4.0
+Indicate if changes were made.No additional restrictions.
+How to Cite:maomaoati-coder. (2026). PGU: A Hardware-Level Physical LogicGuard Unit for the AGI Era.GitHub: github.com/maomaoati-coder/PGU-chakouLicense: CC BY 4.0
+Full License Text:https://creativecommons.org/licenses/by/4.0/legalcode
+================================================================RTL CODE LICENSE (Evaluation Only)
+Applies to: rtl/ directory and all files
+Copyright 2026 maomaoati-coder. All Rights Reserved.
+The RTL source code located in the rtl/ directory is madeavailable for viewing and technical evaluation only.
+You MAY:
+Read and study the code for personal learning
+Reference the code in academic papers with attribution
+Run simulations for evaluation purposes
+You MAY NOT (without explicit written permission):
+Use this code in any commercial product or service
+Integrate this code into any hardware design for production
+Copy, redistribute, or sublicense this code
+Use this code in any tape-out or manufacturing process
+Commercial Licensing:Enterprises or individuals seeking to use this RTL codein commercial products must obtain a separate writtenlicense agreement from the author.
+Inquiries: github.com/maomaoati-coder/PGU-chakou
+================================================================© 2026 maomaoati-coder. Some Rights Reserved.
