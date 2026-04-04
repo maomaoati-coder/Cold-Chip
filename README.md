@@ -1,5 +1,4 @@
 
-![License](https://img.shields.io/badge/License-CC%20BY--NC%204.0-blue.svg)
 ![Verilog](https://img.shields.io/badge/Language-Verilog%2FSystemVerilog-orange.svg)
 ![Simulator](https://img.shields.io/badge/Simulator-Icarus%20Verilog%2012.0-green.svg)
 ![EFF](https://img.shields.io/badge/EFF-98.04%25-brightgreen.svg)
