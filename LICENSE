@@ -3,11 +3,11 @@
 ║    毛广辉开放查阅许可证 第2版                                      ║
 ╚══════════════════════════════════════════════════════════════════╝
 
-Work          : Cold Chip (冷芯) — Zero-Heat Dissipation Liquid-State Computing Architecture
+Work          : Cold-Chip
 Description   : https://github.com/maomaoati-coder/Cold-Chip
 Copyright     : © 2026 Mao Guanghui. All Rights Reserved.
-Repository    : https://github.com/maomaoati-coder/cold-chip
-Contact       : GitHub Issues → https://github.com/maomaoati-coder/cold-chip/issues  (subject: 'Authorization Inquiry')
+Repository    : https://github.com/maomaoati-coder/Cold-Chip
+Contact       : GitHub Issues → https://github.com/maomaoati-coder/Cold-Chip/issues  (subject: 'Authorization Inquiry')
 License       : MGOVL v2.0
 Effective     : 2026
 
@@ -71,7 +71,7 @@ grants You the following rights worldwide, royalty-free:
 
 2.3  SHARING RIGHT
      You are encouraged to share the original repository link
-     (https://github.com/maomaoati-coder/cold-chip) to maximize exposure and discoverability.
+     (https://github.com/maomaoati-coder/Cold-Chip) to maximize exposure and discoverability.
      Sharing original links is explicitly encouraged with no
      restrictions.
 
@@ -82,28 +82,28 @@ ARTICLE 3 — ATTRIBUTION REQUIREMENTS (MANDATORY)
 When exercising any right granted under Article 2, You MUST:
 
 (a) Credit the original author:  Mao Guanghui
-(b) State the work title:        Cold Chip (冷芯) — Zero-Heat Dissipation Liquid-State Computing Architecture
-(c) Provide the original URL:    https://github.com/maomaoati-coder/cold-chip
+(b) State the work title:        Cold-Chip
+(c) Provide the original URL:    https://github.com/maomaoati-coder/Cold-Chip
 (d) Reference this License:      MGOVL v2.0
 
 Recommended citation formats:
 
   Academic (English):
-    Mao, Guanghui. Cold Chip (冷芯) — Zero-Heat Dissipation Liquid-State Computing Architecture. 2026.
-    https://github.com/maomaoati-coder/cold-chip. Licensed under MGOVL v2.0.
+    Mao, Guanghui. Cold-Chip. 2026.
+    https://github.com/maomaoati-coder/Cold-Chip. Licensed under MGOVL v2.0.
 
   BibTeX:
     @misc{2026mao_work,
       author    = {Mao, Guanghui},
-      title     = {Cold Chip (冷芯) — Zero-Heat Dissipation Liquid-State Computing Architecture},
+      title     = {Cold-Chip},
       year      = {2026},
-      url       = {https://github.com/maomaoati-coder/cold-chip},
+      url       = {https://github.com/maomaoati-coder/Cold-Chip},
       note      = {Licensed under MGOVL v2.0}
     }
 
   学术引用（中文）：
-    毛广辉. Cold Chip (冷芯) — Zero-Heat Dissipation Liquid-State Computing Architecture[EB/OL]. 2026.
-    https://github.com/maomaoati-coder/cold-chip. 依据 MGOVL v2.0 许可证发布.
+    毛广辉. Cold-Chip[EB/OL]. 2026.
+    https://github.com/maomaoati-coder/Cold-Chip. 依据 MGOVL v2.0 许可证发布.
 
 ════════════════════════════════════════════════════════════════════
 
@@ -154,7 +154,7 @@ ARTICLE 5 — COMMERCIAL AUTHORIZATION
      Holder (Mao Guanghui) prior to use.
 
 5.2  To request commercial authorization, contact:
-     GitHub Issues → https://github.com/maomaoati-coder/cold-chip/issues  (subject: 'Authorization Inquiry')
+     GitHub Issues → https://github.com/maomaoati-coder/Cold-Chip/issues  (subject: 'Authorization Inquiry')
 
 5.3  Include in your request:
      · Name and background of the requesting party
@@ -176,7 +176,7 @@ ARTICLE 6 — PRIOR ART PROTECTION
 
 6.1  The Work was first publicly disclosed in 2026 as recorded
      in the repository commit history at:
-     https://github.com/maomaoati-coder/cold-chip
+     https://github.com/maomaoati-coder/Cold-Chip
 
 6.2  This public disclosure record constitutes a timestamped
      prior art statement for all technical solutions described
@@ -293,7 +293,7 @@ QUICK REFERENCE SUMMARY
 
   🔒 REQUIRES WRITTEN AUTHORIZATION FROM MAO GUANGHUI
      · All commercial use
-     · Contact: GitHub Issues → https://github.com/maomaoati-coder/cold-chip/issues  (subject: 'Authorization Inquiry')
+     · Contact: GitHub Issues → https://github.com/maomaoati-coder/Cold-Chip/issues  (subject: 'Authorization Inquiry')
 
 ════════════════════════════════════════════════════════════════════
 
@@ -311,4 +311,5 @@ QUICK REFERENCE SUMMARY
 
 © 2026 Mao Guanghui. All Rights Reserved.
 MGOVL v2.0 — Mao Guanghui Open View License
-https://github.com/maomaoati-coder/cold-chip
+https://github.com/maomaoati-coder/Cold-Chip
+
