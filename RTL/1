@@ -2,16 +2,7 @@
 //  COLD CHIP · 冷芯芯片 · RTL顶层设计
 //  架构：四大功能岛 + 液态自适应时钟 + 热防御 + EFF验证
 //  EFF = (Erecycled ÷ Etotal) → 100%
-//  // Author : maomaoati-coder
 
-// License : MGOVL v2.0 (Mao Guanghui Open View License)
-
-// Copyright : © 2026 Mao Guanghui. All Rights Reserved.
-
-// WARNING: Unauthorized reproduction, adaptation, or commercial use// is STRICTLY PROHIBITED under MGOVL v2.0.
-
-// For inquiries: 
-https://github.com/maomaoati-coder/Cold-Chip/issues
 // ============================================================
 
 `timescale 1ns / 1ps
