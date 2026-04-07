@@ -15,6 +15,17 @@
 
 ---
 
+// Author : maomaoati-coder
+
+// License : MGOVL v2.0 (Mao Guanghui Open View License)
+
+// Copyright : © 2026 Mao Guanghui. All Rights Reserved.
+
+// WARNING: Unauthorized reproduction, adaptation, or commercial use// is STRICTLY PROHIBITED under MGOVL v2.0.
+
+// For inquiries: 
+https://github.com/maomaoati-coder/Cold-Chip/issues
+
 ## ⚡ 核心主张
 
 > 冷芯不是"节能芯片"，而是一种**热现象在架构层面被消除**的计算系统。
